@@ -1,7 +1,15 @@
 // src/lib.rs
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{Request, RequestInit, RequestMode, Window, Headers};
+use web_sys::{Request, RequestInit, RequestMode, Headers};
+
+#[wasm_bindgen]
+pub fn setup_cors(request: &Request) {
+    let headers = request.headers();
+    headers.set("Access-Control-Allow-Origin", "*").unwrap();
+    headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS").unwrap();
+    headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization").unwrap();
+}
 
 #[wasm_bindgen]
 pub async fn request(
@@ -44,7 +52,7 @@ async fn make_request(
     let window = web_sys::window().expect("No global `window` exists");
     let request = Request::new_with_str_and_init(url, &request_init(method, data, token, content_type)?)
         .map_err(|_| "Failed to create request")?;
-
+    setup_cors(&request);
     let response = JsFuture::from(window.fetch_with_request(&request)).await?;
     Ok(response)
 }
